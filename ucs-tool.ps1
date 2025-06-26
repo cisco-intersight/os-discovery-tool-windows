@@ -316,7 +316,8 @@ Function GetDriverDetails {
                         $_.devicename -like "*S3260 Dual Pass Through*" -or
                         $_.devicename -like "*QLogic*" -or
                         $_.devicename -like "*Cisco*" -or
-                        $_.devicename -like "*Emulex*"
+                        $_.devicename -like "*Emulex*" -or
+                        $_.devicename -like "*Intel(R) SSD*"
                     }
 
     foreach ($storageController in $storageControllerList) {
@@ -357,7 +358,9 @@ Function GetDriverDetails {
             $osInv | Add-Member -type NoteProperty -name Value -Value $storage_device_map["SAS HBA"]
         }
         elseif(($storageController.DeviceName -like "*NVMe*") -or
-               ($storageController.DeviceName -like "*U.2*") -or ($storageController.DeviceName -like "*NVM Express*"))
+               ($storageController.DeviceName -like "*U.2*") -or
+               ($storageController.DeviceName -like "*NVM Express*") -or
+               ($storageController.DeviceName -like "*Intel(R) SSD*"))
         {
             $osInv | Add-Member -type NoteProperty -name Value -Value $storage_device_map["NVMe"]
         }
