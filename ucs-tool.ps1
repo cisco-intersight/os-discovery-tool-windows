@@ -166,7 +166,8 @@ Function GetDriverDetails {
                         $_.devicename -like "*I350*" -or
                         $_.devicename -like "*I210*" -or
                         $_.devicename -like "*E810*" -or
-                        $_.Devicename -like "*Nvidia*"
+                        $_.Devicename -like "*Nvidia*" -or
+                        $_.Devicename -like "*Mellanox*"
                     }
     $devcount = 0
 
@@ -198,10 +199,6 @@ Function GetDriverDetails {
         {
             $osInv | Add-Member -type NoteProperty -name Value -Value "fnic"
         }
-        elseif($netdev.DeviceName -like "*LOM*")
-        {
-            $osInv | Add-Member -type NoteProperty -name Value -Value "Ethernet"
-        }
         elseif(($netdev.DeviceName -like "*Intel(R) i350*") -or
                ($netdev.DeviceName -like "*I710*") -or
                ($netdev.DeviceName -like "*XXV710*") -or
@@ -216,7 +213,9 @@ Function GetDriverDetails {
                ($netdev.DeviceName -like "*I225*") -or
                ($netdev.DeviceName -like "*I350*") -or
                ($netdev.DeviceName -like "*I210*") -or
-               ($netdev.DeviceName -like "*E810*"))
+               ($netdev.DeviceName -like "*E810*") -or 
+               ($netdev.DeviceName -like "*Mellanox*") -or
+               ($netdev.DeviceName -like "*LOM*"))
         {
             $osInv | Add-Member -type NoteProperty -name Value -Value "Ethernet"
         }
@@ -316,7 +315,6 @@ Function GetDriverDetails {
                         $_.devicename -like "*S3260 Dual Raid*" -or
                         $_.devicename -like "*S3260 Dual Pass Through*" -or
                         $_.devicename -like "*QLogic*" -or
-                        $_.devicename -like "*Mellanox*" -or
                         $_.devicename -like "*Cisco*" -or
                         $_.devicename -like "*Emulex*"
                     }
