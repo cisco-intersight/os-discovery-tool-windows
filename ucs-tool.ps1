@@ -262,9 +262,9 @@ Function GetDriverDetails {
         {
             continue
         }
-        if((!$driverList.Contains($osInv.Value)) -or (!$driverNameList.Contains($storageController.DeviceName))) {
+        if((!$driverList.Contains($osInv.Value)) -or (!$driverNameList.Contains($netdev.DeviceName))) {
             $driverList.Add($osInv.Value)
-            $driverNameList.Add($storageController.DeviceName)
+            $driverNameList.Add($netdev.DeviceName)
             $count = $osInvCollection.Add($osInv)
             Clear-Variable -Name osInv
             $osInv = New-Object System.Object
