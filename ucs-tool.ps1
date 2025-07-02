@@ -13,9 +13,9 @@
 
 .TAGS
 
-.LICENSEURI
+.LICENSEURI https://github.com/cisco-intersight/os-discovery-tool-windows/blob/main/LICENSE
 
-.PROJECTURI
+.PROJECTURI https://github.com/cisco-intersight/os-discovery-tool-windows
 
 .ICONURI
 
@@ -26,7 +26,6 @@
 .EXTERNALSCRIPTDEPENDENCIES
 
 .RELEASENOTES
-
 
 .PRIVATEDATA
 
@@ -532,6 +531,19 @@ Function SendInventoryToIMC {
 }
 
 # ---------------------------------------------------------
+# ---------------------- Utils Block ----------------------
+# ---------------------------------------------------------
+Function GetWindowHostSerial {
+    $hostserial = (Get-CimInstance -ClassName Win32_BIOS | Select-Object SerialNumber).SerialNumber.ToString()
+    Write-Host "Serial Number: $hostserial"
+}
+
+Function GetServerModel {
+    $servermodel = (Get-CimInstance -ClassName Win32_ComputerSystem | select Model).Model
+    Write-Host "Server Model: $servermodel"
+}
+
+# ---------------------------------------------------------
 # ---------------------- Main Block -----------------------
 # ---------------------------------------------------------
 
@@ -539,6 +551,8 @@ Function SendInventoryToIMC {
 CheckIpmiUtilPath -ipmiutilpath $ipmiutilpath
 
 #Gather inventory and save it locally in host-inv.yaml file
+GetServerModel
+GetWindowHostSerial
 SaveInventory
 
 # Send the inventory file host-inv.yaml file to IMC.
