@@ -1,7 +1,6 @@
-
 <#PSScriptInfo
 
-.VERSION 1.0
+.VERSION 1.0.0
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -11,7 +10,7 @@
 
 .COPYRIGHT Copyright (c) 2025 Cisco Systems, Inc. All rights reserved.
 
-.TAGS
+.TAGS UCS, UCSTool, Intersight, Windows
 
 .LICENSEURI https://github.com/cisco-intersight/os-discovery-tool-windows/blob/main/LICENSE
 
@@ -36,7 +35,9 @@
 .DESCRIPTION 
  The Cisco Intersight ucs-tool is used to collect operating system and driver information for Hardware Compliance Validation. 
 
-#> 
+#>
+
+#Requires -Version 7.2
 
 param(
 	[Parameter(Mandatory=$true)]
@@ -45,6 +46,7 @@ param(
 
 $file = "host-inv.yaml"
 $templog = "temp.log"
+$ucsToolVersion = "1.0.0"
 
 # ---------------------------------------------------------
 # -------------------- INVENTORY Block --------------------
@@ -443,6 +445,9 @@ Function SaveInventory {
 		Write-Output "  key: $($x.Key.substring(18))" | Out-File -FilePath $file -Append
 		Write-Output "  value: $($x.Value)" | Out-File -FilePath $file -Append
 	}
+    Write-Output " -kv:" | Out-File -FilePath $file -Append
+	Write-Output "  key: os.ucsToolVersion" | Out-File -FilePath $file -Append
+	Write-Output "  value: $ucsToolVersion" | Out-File -FilePath $file -Append
 	Write-Output " -kv:" | Out-File -FilePath $file -Append
 	Write-Output "  key: os.InvEndKey" | Out-File -FilePath $file -Append
 	Write-Output "  value: InvEndValue" | Out-File -FilePath $file -Append
