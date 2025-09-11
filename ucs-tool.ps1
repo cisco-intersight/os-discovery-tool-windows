@@ -486,12 +486,17 @@ Function CheckIpmiUtilPath {
 }
 
 Function SendInventoryToIMC {
+    $netfunction="0x36"
+    $smodel = GetServerModel
+    if ($smodel -eq "CAI-845A-M8") {
+        $netfunction="0x34"
+    }
 	#Send IPMI command to delete host-inv.yaml off IMC
-	$cmd = "cmd -d 0x36 0x77 0x03 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c"
+	$cmd = "cmd -d " + $netfunction + " 0x77 0x03 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c"
 	Start-Process -FilePath $ipmiutilpath -ArgumentList $cmd -Wait -WindowStyle hidden
 	
 	#Send IPMI command to get a file descriptor for host-inv.yaml from CIMC and save it to a file
-	Start-Process -FilePath $ipmiutilpath -ArgumentList "cmd -d 0x36 0x77 0x00 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c" -Wait -RedirectStandardOutput $templog -WindowStyle hidden
+	Start-Process -FilePath $ipmiutilpath -ArgumentList "cmd -d " + $netfunction + " 0x77 0x00 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c" -Wait -RedirectStandardOutput $templog -WindowStyle hidden
 	$filedescriptor = Get-Content $templog | Select -Index 4
 	
 	try{
@@ -524,7 +529,7 @@ Function SendInventoryToIMC {
 			$payload += "0x" + '{0:X}' -f $byte
 			$filepointer = '{0:X8}' -f $filelocationcounter
 			$filepointer = "0x" + $filepointer.tostring().substring(6,2) + " 0x" + $filepointer.tostring().substring(4,2) + " 0x" + $filepointer.tostring().substring(2,2) + " 0x" + $filepointer.tostring().substring(0,2)
-			$cmd = "cmd -d 0x36 0x77 0x02" + " " + $filedescriptor +  $payloadlength + " " +  $filepointer + " " + $payload
+			$cmd = "cmd -d " + $netfunction + " 0x77 0x02" + " " + $filedescriptor +  $payloadlength + " " +  $filepointer + " " + $payload
 			Start-Process -FilePath $ipmiutilpath -ArgumentList $cmd -Wait -WindowStyle hidden
 			$filelocationcounter += 40
 			$counter = 0
@@ -534,11 +539,11 @@ Function SendInventoryToIMC {
 	# Writing host inventory file last chunk to IMC
 	$filepointer = '{0:X8}' -f $filelocationcounter
 	$filepointer = "0x" + $filepointer.tostring().substring(6,2) + " 0x" + $filepointer.tostring().substring(4,2) + " 0x" + $filepointer.tostring().substring(2,2) + " 0x" + $filepointer.tostring().substring(0,2)
-	$cmd = "cmd -d 0x36 0x77 0x02" + " " + $filedescriptor +  "0x" + '{0:X}' -f $counter + " " +  $filepointer + " " + $payload
+	$cmd = "cmd -d " + $netfunction + " 0x77 0x02" + " " + $filedescriptor +  "0x" + '{0:X}' -f $counter + " " +  $filepointer + " " + $payload
 	Start-Process -FilePath $ipmiutilpath -ArgumentList $cmd -Wait -WindowStyle hidden
 
 	# Closing IMC host-inv.yaml file descriptor
-	$cmd = "cmd -d 0x36 0x77 0x01 " + $filedescriptor
+	$cmd = "cmd -d " + $netfunction + " 0x77 0x01 " + $filedescriptor
 	Start-Process -FilePath $ipmiutilpath -ArgumentList $cmd -Wait -WindowStyle hidden
 	Write-Host "Inventory file has been successfully written to IMC"
 }
@@ -553,7 +558,7 @@ Function GetWindowHostSerial {
 
 Function GetServerModel {
     $servermodel = (Get-CimInstance -ClassName Win32_ComputerSystem | select Model).Model
-    Write-Host "Server Model: $servermodel"
+    return $servermodel
 }
 
 # ---------------------------------------------------------
@@ -564,7 +569,8 @@ Function GetServerModel {
 CheckIpmiUtilPath -ipmiutilpath $ipmiutilpath
 
 #Gather inventory and save it locally in host-inv.yaml file
-GetServerModel
+$smodel = GetServerModel
+Write-Host "Server Model: $smodel"
 GetWindowHostSerial
 SaveInventory
 
