@@ -488,7 +488,7 @@ Function CheckIpmiUtilPath {
 Function SendInventoryToIMC {
     $netfunction="0x36"
     $smodel = GetServerModel
-    if ($smodel -eq "CAI-845A-M8") {
+    if ($smodel -like "CAI-845A*") {
         $netfunction="0x34"
     }
 	#Send IPMI command to delete host-inv.yaml off IMC
@@ -496,7 +496,7 @@ Function SendInventoryToIMC {
 	Start-Process -FilePath $ipmiutilpath -ArgumentList $cmd -Wait -WindowStyle hidden
 	
 	#Send IPMI command to get a file descriptor for host-inv.yaml from CIMC and save it to a file
-	Start-Process -FilePath $ipmiutilpath -ArgumentList "cmd -d " + $netfunction + " 0x77 0x00 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c" -Wait -RedirectStandardOutput $templog -WindowStyle hidden
+	Start-Process -FilePath $ipmiutilpath -ArgumentList ("cmd -d " + $netfunction + " 0x77 0x00 0x68 0x6f 0x73 0x74 0x2d 0x69 0x6e 0x76 0x2e 0x79 0x61 0x6d 0x6c") -Wait -RedirectStandardOutput $templog -WindowStyle hidden
 	$filedescriptor = Get-Content $templog | Select -Index 4
 	
 	try{
