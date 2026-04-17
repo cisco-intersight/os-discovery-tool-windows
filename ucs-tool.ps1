@@ -68,7 +68,7 @@ Function GetTAGPrefix {
 }
 
 Function GetISO8601Time {
-    return ((Get-Date).ToUniversalTime().ToString( "yyyy-MM-ddTHH:mm:ss.fffZ" ))
+    return Get-Date -Format "yyyy-MM-ddTHH:mm:ssK"
 }
 
 Function GetOSDetails{
