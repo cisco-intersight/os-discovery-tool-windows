@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.0
+.VERSION 1.0.2
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -67,15 +67,10 @@ Function GetTAGPrefix {
     Return "intersight.server."
 }
 
-Function GetISO8601Time {
-    return Get-Date -Format "yyyy-MM-ddTHH:mm:ssK"
-}
-
 Function GetOSDetails{
     Param([string]$hostname)
     Write-Host "[$hostname]: Retrieving OS Inventory..."
     $prefix = GetTAGPrefix
-    $updateTS = GetISO8601Time
 
     $osClass = Get-CimInstance -ClassName Win32_OperatingSystem -Computer $hostname
     $osString = $osClass.caption
@@ -84,11 +79,6 @@ Function GetOSDetails{
 
     $vendor, $name, $type, $version, $release, $level = $osString.split(' ')
     $osInvCollection = New-Object System.Collections.ArrayList
-    $osInv = New-Object System.Object
-    $osInv | Add-Member -type NoteProperty -name Key -Value $prefix"os.updateTimestamp"
-    $osInv | Add-Member -type NoteProperty -name Value -Value $updateTS
-    $count = $osInvCollection.Add($osInv)
-
     $osInv = New-Object System.Object
     $osInv | Add-Member -type NoteProperty -name Key -Value $prefix"os.vendor"
     $osInv | Add-Member -type NoteProperty -name Value -Value $vendor
