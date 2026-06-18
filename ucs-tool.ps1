@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.2
+.VERSION 1.0.3
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -46,7 +46,7 @@ param(
 
 $file = "host-inv.yaml"
 $templog = "temp.log"
-$ucsToolVersion = "1.0.0"
+$ucsToolVersion = "1.0.3"
 
 # ---------------------------------------------------------
 # -------------------- INVENTORY Block --------------------
