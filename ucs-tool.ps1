@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.2
+.VERSION 1.0.3
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -46,7 +46,7 @@ param(
 
 $file = "host-inv.yaml"
 $templog = "temp.log"
-$ucsToolVersion = "1.0.0"
+$ucsToolVersion = "1.0.3"
 
 # ---------------------------------------------------------
 # -------------------- INVENTORY Block --------------------
@@ -135,6 +135,8 @@ Function GetDriverDetails {
     $osInvCollection = New-Object System.Collections.ArrayList
     $driverList = New-Object Collections.Generic.List[string]
     $driverNameList = New-Object Collections.Generic.List[string]
+    $hasNvidiaGpuEntry = $false
+    $passthroughGpu = Get-CimInstance Win32_PnPEntity -ComputerName $hostname | Where-Object { $_.Name -like "*NVIDIA*" -or $_.HardwareID -like "*VEN_10DE*" } | Select-Object -First 1 Name, DeviceID, Status
     #vNIC details
     Write-host "[$hostname]: Retrieving Network Driver Inventory..."
     $netDevList = Get-CimInstance Win32_PnPSignedDriver -Computer $hostname | select DeviceName, FriendlyName, DriverVersion, Description, DeviceClass |
@@ -228,7 +230,6 @@ Function GetDriverDetails {
         elseif($netdev.DeviceName -like "*Nvidia*" -and $netdev.DeviceClass -eq "DISPLAY")
         {
             Write-host "[$hostname]: NVIDIA GPU Detected, retrieving GPU inventory..."
-
             # Nvidia-smi will be installed either under 'Program Files' folder or the 'System32' folder in C drive
             $nvidiasmi =  Invoke-Command -ComputerName $hostname -ScriptBlock{Get-ChildItem -Path 'C:\Program Files\', 'C:\Windows\System32\DriverStore\' -Recurse -Include nvidia-smi.exe}
 
@@ -244,11 +245,13 @@ Function GetDriverDetails {
                     {
                         Write-host "[$hostname]: NVIDIA Graphics Driver is installed"
                         $osInv | Add-Member -type NoteProperty -name Value -Value "nvidia(graphics)"
+                        $hasNvidiaGpuEntry = $true
                     }
                     elseif(($mode -contains "TCC") -or ($mode -contains "MCDM"))
                     {
                         Write-host "[$hostname]: NVIDIA Compute Driver is installed"
                         $osInv | Add-Member -type NoteProperty -name Value -Value "nvidia(compute)"
+                        $hasNvidiaGpuEntry = $true
                     }
                     else
                     {
@@ -303,6 +306,32 @@ Function GetDriverDetails {
             $count = $osInvCollection.Add($osInv)
             $devcount = $devcount + 1
         }
+    }
+
+    if($passthroughGpu -and -not $hasNvidiaGpuEntry -and -not $driverList.Contains("nvidia(passthrough)")) {
+        Write-host "[$hostname]: NVIDIA GPU configured in passthrough mode"
+
+        $osInv = New-Object System.Object
+        $key = $prefix+"os.driver."+$devcount+".name"
+        $osInv | Add-Member -type NoteProperty -name Key -Value $key
+        $osInv | Add-Member -type NoteProperty -name Value -Value "nvidia(passthrough)"
+        $count = $osInvCollection.Add($osInv)
+
+        $osInv = New-Object System.Object
+        $key = $prefix+"os.driver."+$devcount+".description"
+        $osInv | Add-Member -type NoteProperty -name Key -Value $key
+        $osInv | Add-Member -type NoteProperty -name Value -Value $passthroughGpu.Name
+        $count = $osInvCollection.Add($osInv)
+
+        $osInv = New-Object System.Object
+        $key = $prefix+"os.driver."+$devcount+".version"
+        $osInv | Add-Member -type NoteProperty -name Key -Value $key
+        $osInv | Add-Member -type NoteProperty -name Value -Value ""
+        $count = $osInvCollection.Add($osInv)
+
+        $driverList.Add("nvidia(passthrough)")
+        $driverNameList.Add($passthroughGpu.Name)
+        $devcount = $devcount + 1
     }
 
     #storage controller details:
