@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.3
+.VERSION 1.0.4
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -46,7 +46,7 @@ param(
 
 $file = "host-inv.yaml"
 $templog = "temp.log"
-$ucsToolVersion = "1.0.3"
+$ucsToolVersion = "1.0.4"
 
 # ---------------------------------------------------------
 # -------------------- INVENTORY Block --------------------
@@ -139,7 +139,7 @@ Function GetDriverDetails {
     $passthroughGpu = Get-CimInstance Win32_PnPEntity -ComputerName $hostname | Where-Object { $_.Name -like "*NVIDIA*" -or $_.HardwareID -like "*VEN_10DE*" } | Select-Object -First 1 Name, DeviceID, Status
     #vNIC details
     Write-host "[$hostname]: Retrieving Network Driver Inventory..."
-    $netDevList = Get-CimInstance Win32_PnPSignedDriver -Computer $hostname | select DeviceName, FriendlyName, DriverVersion, Description, DeviceClass |
+    $netDevList = Get-CimInstance Win32_PnPSignedDriver -Computer $hostname | select DeviceName, FriendlyName, DriverVersion, Description, DeviceClass, Manufacturer |
                     where {
                         $_.Devicename -like "*Ethernet*" -or
                         $_.Devicename -like "*FCoE*" -or
@@ -174,7 +174,7 @@ Function GetDriverDetails {
             continue
         }
 
-        if($netdev.DeviceName -like "*Ethernet*") {
+        if($netdev.DeviceName -like "*Ethernet*" -and $netdev.Manufacturer -ne "Intel") {
             $netdrivername = (Get-CimInstance -class "Win32_NetworkAdapter" -namespace "root\CIMV2" -ComputerName $hostname) | select Name, MACAddress, ServiceName |
                     where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
 
@@ -201,6 +201,7 @@ Function GetDriverDetails {
         {
             $osInv | Add-Member -type NoteProperty -name Value -Value "fnic"
         }
+        # Intel NICs and Mellanox NICs
         elseif(($netdev.DeviceName -like "*Intel(R) i350*") -or
                ($netdev.DeviceName -like "*I710*") -or
                ($netdev.DeviceName -like "*XXV710*") -or
@@ -336,7 +337,7 @@ Function GetDriverDetails {
 
     #storage controller details:
     Write-host "[$hostname]: Retrieving Storage Driver Inventory..."
-    $storageControllerList = Get-CimInstance Win32_PnPSignedDriver -Computer $hostname | select DeviceName, DriverVersion |
+    $storageControllerList = Get-CimInstance Win32_PnPSignedDriver -Computer $hostname | select DeviceName, DriverVersion, FriendlyName |
                     where {
                         $_.devicename -like "*RAID SAS*" -or
                         $_.devicename -like "*Compute RAID Controller*" -or
@@ -358,7 +359,7 @@ Function GetDriverDetails {
 
     foreach ($storageController in $storageControllerList) {
         $stdrivername = (Get-CimInstance -class "Win32_SCSIController" -namespace "root\CIMV2" -ComputerName $hostname) | select Name, DriverName |
-                where { $_.Name -like $storageController.DeviceName }
+                where { $_.Name -like $storageController.DeviceName -or $_.Name -like $storageController.FriendlyName }
 
         # Skip if DriverName is null or empty
         if (-not $stdrivername.DriverName -or $stdrivername.DriverName -eq "") {
