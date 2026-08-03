@@ -375,6 +375,7 @@ Function GetDriverDetails {
                 $storageController.DeviceName -like "*Mega*") -or
                 $storageController.DeviceName -like "*SAS RAID*" -or
                 $storageController.DeviceName -like "*RAID SAS*" -or
+                $storageController.DeviceName -like "*UCSC-RAID*" -or
                 $storageController.DeviceName -like "*RAID Controller*")
         {
             if ($storageController.DeviceName -like "*Tri-Mode*")
