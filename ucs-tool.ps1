@@ -1,6 +1,6 @@
 <#PSScriptInfo
 
-.VERSION 1.0.4
+.VERSION 1.0.5
 
 .GUID 199b5aa1-060e-4c45-a2f7-84fd5ec08e25
 
@@ -46,7 +46,7 @@ param(
 
 $file = "host-inv.yaml"
 $templog = "temp.log"
-$ucsToolVersion = "1.0.4"
+$ucsToolVersion = "1.0.5"
 
 # ---------------------------------------------------------
 # -------------------- INVENTORY Block --------------------
@@ -159,6 +159,7 @@ Function GetDriverDetails {
                         $_.devicename -like "*I350*" -or
                         $_.devicename -like "*I210*" -or
                         $_.devicename -like "*E810*" -or
+                        $_.devicename -like "*E835*" -or
                         $_.Devicename -like "*Nvidia*" -or
                         $_.Devicename -like "*Mellanox*"
                     }
@@ -216,7 +217,8 @@ Function GetDriverDetails {
                ($netdev.DeviceName -like "*I225*") -or
                ($netdev.DeviceName -like "*I350*") -or
                ($netdev.DeviceName -like "*I210*") -or
-               ($netdev.DeviceName -like "*E810*") -or 
+               ($netdev.DeviceName -like "*E810*") -or
+               ($netdev.DeviceName -like "*E835*") -or
                ($netdev.DeviceName -like "*Mellanox*") -or
                ($netdev.DeviceName -like "*LOM*"))
         {
