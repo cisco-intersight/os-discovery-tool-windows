@@ -160,10 +160,12 @@ Function GetDriverDetails {
                         $_.devicename -like "*I210*" -or
                         $_.devicename -like "*E810*" -or
                         $_.devicename -like "*E835*" -or
+                        $_.devicename -like "*E825*" -or
                         $_.Devicename -like "*Nvidia*" -or
                         $_.Devicename -like "*Mellanox*"
                     }
     $devcount = 0
+    $allNetworkAdapters = Get-CimInstance -class "Win32_NetworkAdapter" -namespace "root\CIMV2" -ComputerName $hostname | select Name, MACAddress, ServiceName
 
     foreach ($netdev in $netDevList) {
         $key = $prefix+"os.driver."+$devcount+".name"
@@ -176,8 +178,7 @@ Function GetDriverDetails {
         }
 
         if($netdev.DeviceName -like "*Ethernet*" -and $netdev.Manufacturer -ne "Intel") {
-            $netdrivername = (Get-CimInstance -class "Win32_NetworkAdapter" -namespace "root\CIMV2" -ComputerName $hostname) | select Name, MACAddress, ServiceName |
-                    where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
+            $netdrivername = $allNetworkAdapters | where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
 
             if(-not $netdrivername){
                 continue
@@ -218,16 +219,17 @@ Function GetDriverDetails {
                ($netdev.DeviceName -like "*I350*") -or
                ($netdev.DeviceName -like "*I210*") -or
                ($netdev.DeviceName -like "*E810*") -or
+               ($netdev.DeviceName -like "*E825*") -or
                ($netdev.DeviceName -like "*E835*") -or
                ($netdev.DeviceName -like "*Mellanox*") -or
                ($netdev.DeviceName -like "*LOM*"))
         {
-            $osInv | Add-Member -type NoteProperty -name Value -Value "Ethernet"
+            $netdrivername = $allNetworkAdapters | where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
+            $osInv | Add-Member -type NoteProperty -name Value -Value $netdrivername.ServiceName
         }
         elseif($netdev.DeviceName -like "*Nvidia*" -and $netdev.DeviceClass -eq "NET")
         {
-            $netdrivername = (Get-CimInstance -class "Win32_NetworkAdapter" -namespace "root\CIMV2" -ComputerName $hostname) | select Name, MACAddress, ServiceName |
-                    where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
+            $netdrivername = $allNetworkAdapters | where { $_.Name -eq $netdev.FriendlyName -and $_.MACAddress}
             $osInv | Add-Member -type NoteProperty -name Value -Value $netdrivername.ServiceName
         }
         elseif($netdev.DeviceName -like "*Nvidia*" -and $netdev.DeviceClass -eq "DISPLAY")
@@ -399,7 +401,7 @@ Function GetDriverDetails {
         elseif(($storageController.DeviceName -like "*SAS HBA*") -or
                ($storageController.DeviceName -like "*S3260 Dual Pass Through*"))
         {
-            $osInv | Add-Member -type NoteProperty -name Value -Value $storage_device_map["SAS HBA"]
+            $osInv | Add-Member -type NoteProperty -name Value -Value $stdrivername.DriverName
         }
         elseif(($storageController.DeviceName -like "*NVMe*") -or
                ($storageController.DeviceName -like "*U.2*") -or
