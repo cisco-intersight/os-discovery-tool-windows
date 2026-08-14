@@ -363,7 +363,7 @@ Function GetDriverDetails {
 
     foreach ($storageController in $storageControllerList) {
         $stdrivername = (Get-CimInstance -class "Win32_SCSIController" -namespace "root\CIMV2" -ComputerName $hostname) | select Name, DriverName |
-                where { $_.Name -like $storageController.DeviceName -or $_.Name -like $storageController.FriendlyName }
+                where { $_.Name -like $storageController.DeviceName -or $_.Name -like $storageController.FriendlyName } | Select-Object -First 1
 
         # Skip if DriverName is null or empty
         if (-not $stdrivername.DriverName -or $stdrivername.DriverName -eq "") {
@@ -477,7 +477,6 @@ Function ProcessHostOsInventory {
     $combinedCollection = New-Object System.Collections.ArrayList
     $combinedCollection += $osInvCollection
     $combinedCollection += $driverInvCollection
-    $osInvJson = ConvertTo-Json -Depth 2 @{ "Tags"=foreach ($item in $combinedCollection) {@{Key=$item.Key; Value=$item.Value}}}
     Return $combinedCollection
 }
 
