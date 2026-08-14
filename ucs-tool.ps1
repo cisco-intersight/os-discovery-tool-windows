@@ -420,14 +420,7 @@ Function GetDriverDetails {
         }
         elseif($storageController.DeviceName -like "*Emulex*")
         {
-			if ($stdrivername.DriverName -is [System.Collections.IEnumerable])
-			{
-				$osInv | Add-Member -type NoteProperty -name Value -Value $stdrivername.DriverName[0]
-			}
-			else
-			{
-				$osInv | Add-Member -type NoteProperty -name Value -Value $stdrivername.DriverName
-			}
+            $osInv | Add-Member -type NoteProperty -name Value -Value $stdrivername.DriverName
         }
         # Ideally this condition should be sufficient to fetch driver name for storage controller
         # storageController DeviceName and $stdriverName.Name will be same so this condition will always make sure 
